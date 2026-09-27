@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポテトサイズ診断</title>
+  <style>
+    /* 全体の基本デザイン */
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #fff8e7; /* ポテトをイメージした薄い黄色 */
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    /* アプリのカードコンテナ */
+    .app-container {
+      background-color: #ffffff;
+      border: 4px solid #e60012; /* マックレッド */
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 450px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 0 #cc0010, 0 15px 20px rgba(0,0,0,0.15);
+    }
+
+    /* キャラクター画像 */
+    .character-img {
+      width: 140px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    /* タイトル */
+    h1 {
+      color: #e60012;
+      font-size: 24px;
+      margin: 0 0 15px 0;
+    }
+
+    /* 進捗度表示 */
+    .progress-text {
+      font-weight: bold;
+      color: #ff9900;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    /* 質問カード */
+    .question-box {
+      background-color: #fff3cd;
+      border: 2px dashed #ffc107;
+      border-radius: 12px;
+      padding: 20px 15px;
+      font-size: 18px;
+      font-weight: bold;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    /* ボタンコンテナ */
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    /* ボタン共通スタイル */
+    .btn {
+      flex: 1;
+      padding: 15px 10px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    /* はいボタン */
+    .btn-yes {
+      background-color: #e60012;
+      color: #ffffff;
+      box-shadow: 0 4px 0 #a0000c;
+    }
+
+    /* いいえボタン */
+    .btn-no {
+      background-color: #ffc107;
+      color: #333333;
+      box-shadow: 0 4px 0 #c79600;
+    }
+
+    /* 結果画面エリア（初期状態は非表示） */
+    #result-screen {
+      display: none;
+    }
+
+    .result-size {
+      font-size: 32px;
+      color: #e60012;
+      font-weight: bold;
+      margin: 15px 0;
+      padding: 10px;
+      background-color: #fff0f0;
+      border-radius: 10px;
+    }
+
+    .advice-box {
+      background-color: #f8f9fa;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: left;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .advice-title {
+      font-weight: bold;
+      color: #ff9900;
+      margin-bottom: 8px;
+    }
+
+    .advice-context {
+      font-size: 13px;
+      color: #e60012;
+      background-color: #fff0f0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #advice-text {
+      white-space: pre-wrap; /* 改行をそのまま反映する設定 */
+    }
+
+    /* もう一度診断ボタン */
+    .btn-restart {
+      background-color: #28a745;
+      color: #ffffff;
+      width: 100%;
+      box-shadow: 0 4px 0 #1e7e34;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- キャラクター画像（imageフォルダ内のpotato.pngを指定） -->
+    <img src="image/potato.png" alt="ポテトキャラクター" class="character-img">
+
+    <!-- 質問画面 -->
+    <div id="question-screen">
+      <h1>ポテトサイズ診断</h1>
+      <div id="progress" class="progress-text">第 1 / 16 問</div>
+      <div id="question-text" class="question-box">質問を読み込み中...</div>
+      
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="answerQuestion(true)">はい</button>
+        <button class="btn btn-no" onclick="answerQuestion(false)">いいえ</button>
+      </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="result-screen">
+      <h1>診断結果発表！</h1>
+      <p style="margin:0; font-weight:bold; color:#666;">あなたにぴったりのポテトは…</p>
+      
+      <div id="result-size" class="result-size">Mサイズ</div>
+
+      <div class="advice-box">
+        <div class="advice-title">💡 ポテトからのひとこと</div>
+        <div id="advice-context" class="advice-context"></div>
+        <div id="advice-text">アドバイス内容...</div>
+      </div>
+
+      <button class="btn btn-restart" onclick="restartQuiz()">もう一度診断する</button>
+    </div>
+  </div>
+
+  <script>
+    // 16問の質問データ・点数・「はい」のときのアドバイス（ご指定文章に修正）
+    const questions = [
+      { id: 1, text: "最近、失恋しましたか？", score: 2, advice: "君はあの人がポッテト（とっても）好きだったんだね、、、でも今日は、ポテトくらい自分を好きになってあげよう。" },
+      { id: 2, text: "今、ダイエット中ですか？", score: -2, advice: "ダイエット中なのに、ここまでポテトのことを考えている時点で、\nもう半分ポテト食べてます。" },
+      { id: 3, text: "最近、「塩っけが足りないな……」と思ったことがありますか？", score: 2, advice: "それ、ポテトで補えます。" },
+      { id: 4, text: "ポテトはおやつに入りますか？", score: 1, advice: "君にとってポテトはおやつ。\nでもポテト側からしたら、君が本命かもしれない。" },
+      { id: 5, text: "正直、ここまで質問に答えている時点で、もうポテトが食べたいですか？", score: 2, advice: "ここまで来たら、もう診断結果を待つ必要あります？" },
+      { id: 6, text: "財布の中身に少し余裕がありますか？", score: 1, advice: "ポテトって一人一個って決まりは無いよ？？" },
+      { id: 7, text: "正直、ナゲットに浮気しそう？", score: -1, advice: "君はナゲットを選んだ。\nでも心の矢印はポテトを向いていた、、、" },
+      { id: 8, text: "友達がLサイズを頼んだら、自分もLにしたくなりますか？", score: 1, advice: "人は、人のポテトを見ると自分のポテトが小さく見える生き物です。" },
+      { id: 9, text: "今の自分を変えたくないですか？", score: -1, advice: "変わらなくていい。\nただ、ポテトのサイズくらいは変えてみてもいいかもしれない。" },
+      { id: 10, text: "今日いいことありました？", score: 1, advice: "今日いいことがあったあなたへ。\nその幸せ、ポテトでさらに延長できます。" },
+      { id: 11, text: "ポテトの箱に残った塩を指で集めたことがありますか？", score: 2, advice: "そこまでして塩を求めるあなたに、Sサイズは少し酷じゃない…?♡" },
+      { id: 12, text: "じゃがいもが野菜だから実質ヘルシーですよね？", score: 1, advice: "そうです。\nポテトは野菜です。異論は認めません。" },
+      { id: 13, text: "ポテトが冷めていると、店員さんに言いたくなるくらい悲しくなりますか？", score: 1, advice: "鉄は熱いうちに打て。ポテトは熱いうちに食え。" },
+      { id: 14, text: "今この瞬間、ポテトより会いたい人が思いつきますか？", score: -2, advice: "ポテトはここでずっと待ってるから、早く行ってこいよ。\nいつでも揚げたてくれてやるからよ。" },
+      { id: 15, text: "ここまで読んで「もう早く結果出してくれ」と思いましたか？", score: 1, advice: "待たせてごめんなさい。\nでもポテトのためです。" },
+      { id: 16, text: "Mを注文したのに、Lを持っている人を見ると後悔しますか？", score: 2, advice: "人のLを羨む前に、自分のMを愛してあげてください。" }
+    ];
+
+    // 状態を管理する変数
+    let currentQuestionIndex = 0;
+    let totalScore = 0;
+    let yesAnsweredItems = [];
+
+    // 初期化表示
+    showQuestion();
+
+    // 質問を表示する関数
+    function showQuestion() {
+      const q = questions[currentQuestionIndex];
+      document.getElementById('progress').innerText = `第 ${currentQuestionIndex + 1} / ${questions.length} 問`;
+      document.getElementById('question-text').innerText = q.text;
+    }
+
+    // 回答ボタンが押されたときの処理
+    function answerQuestion(isYes) {
+      if (isYes) {
+        totalScore += questions[currentQuestionIndex].score;
+        yesAnsweredItems.push(questions[currentQuestionIndex]);
+      }
+
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    // 結果表示の関数
+    function showResult() {
+      document.getElementById('question-screen').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'block';
+
+      // 点数に応じたサイズ判定
+      let resultSizeText = "";
+      if (totalScore <= 3) {
+        resultSizeText = "ポテトなし 🙅‍♂️";
+      } else if (totalScore <= 8) {
+        resultSizeText = "Sサイズ 🍟";
+      } else if (totalScore <= 14) {
+        resultSizeText = "Mサイズ 🍟🍟";
+      } else {
+        resultSizeText = "Lサイズ 🍟🍟🍟";
+      }
+      document.getElementById('result-size').innerText = resultSizeText;
+
+      // ランダムアドバイスと背景質問の選定
+      const contextEl = document.getElementById('advice-context');
+      const textEl = document.getElementById('advice-text');
+
+      if (yesAnsweredItems.length === 0) {
+        // 全部「いいえ」の場合
+        contextEl.style.display = 'none';
+        textEl.innerText = "せめて、ポテトには「はい」と答えようよ。";
+      } else {
+        // 「はい」と答えた質問の中からランダムに1つ選ぶ
+        const randomIndex = Math.floor(Math.random() * yesAnsweredItems.length);
+        const selectedItem = yesAnsweredItems[randomIndex];
+
+        contextEl.style.display = 'block';
+        contextEl.innerText = `「${selectedItem.text}」に『はい』`;
+        textEl.innerText = selectedItem.advice;
+      }
+    }
+
+    // もう一度診断する（リセット）
+    function restartQuiz() {
+      currentQuestionIndex = 0;
+      totalScore = 0;
+      yesAnsweredItems = [];
+
+      document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('question-screen').style.display = 'block';
+      
+      showQuestion();
+    }
+  </script>
+</body>
+</html>
